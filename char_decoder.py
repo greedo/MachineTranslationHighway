@@ -12,21 +12,15 @@ class CharDecoder(nn.Module):
         @param char_embedding_size (int): dimensionality of character embeddings
         @param target_vocab (VocabEntry): vocabulary for the target language. See vocab.py for documentation.
         """
-        ### YOUR CODE HERE for part 2a
-        ### TODO - Initialize as an nn.Module.
-        ###      - Initialize the following variables:
-        ###        self.charDecoder: LSTM. Please use nn.LSTM() to construct this.
-        ###        self.char_output_projection: Linear layer, called W_{dec} and b_{dec} in the PDF
-        ###        self.decoderCharEmb: Embedding matrix of character embeddings
-        ###        self.target_vocab: vocabulary for the target language
-        ###
-        ### Hint: - Use target_vocab.char2id to access the character vocabulary for the target language.
-        ###       - Set the padding_idx argument of the embedding matrix.
-        ###       - Create a new Embedding layer. Do not reuse embeddings created in Part 1 of this assignment.
-        
-
-        ### END YOUR CODE
-
+        super().__init__()
+        self.charDecoder = nn.LSTM(input_size=char_embedding_size,
+                                   hidden_size=hidden_size)
+        self.char_output_projection = nn.Linear(hidden_size,
+                                                len(target_vocab.char2id))
+        self.decoderCharEmb = nn.Embedding(num_embeddings=len(target_vocab.char2id),
+                                           embedding_dim=char_embedding_size,
+                                           padding_idx=target_vocab.char2id['<pad>'])
+        self.target_vocab = target_vocab
 
     
     def forward(self, input, dec_hidden=None):
@@ -40,7 +34,7 @@ class CharDecoder(nn.Module):
         """
         ### YOUR CODE HERE for part 2b
         ### TODO - Implement the forward pass of the character decoder.
-        
+        input_embed = self.decoderCharEmb(input)
         
         ### END YOUR CODE 
 
