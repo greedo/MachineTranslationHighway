@@ -114,14 +114,7 @@ class VocabEntry(object):
         @param sents (list[list[str]]): sentence(s) in words
         @return word_ids (list[list[list[int]]]): sentence(s) in indices
         """
-        word_ids = []
-        for sent in sents:
-            word_sent = []
-            for word in sent:
-                word_sent.append([self.char2id[char] for char in '{'+word+'}'])
-            word_ids.append(word_sent)
-
-        return word_ids
+        return [[[self.char2id[char] for char in '{'+word+'}'] for word in sent] for sent in sents]
 
     def words2indices(self, sents):
         """ Convert list of sentences of words into list of list of indices.
@@ -146,13 +139,9 @@ class VocabEntry(object):
 
         @returns sents_var: tensor of (max_sentence_length, batch_size, max_word_length)
         """
-        ### YOUR CODE HERE for part 1c
-        ### TODO: 
-        ###     Connect `words2charindices()` and `pad_sents_char()` which you've defined in 
-        ###     previous parts
-        
-
-        ### END YOUR CODE
+        sents = self.words2charindices(sents)
+        sents_padded = pad_sents_char(sents, self.char2id['<pad>'])
+        return torch.tensor(sents_padded, device=device).permute(1, 0, 2)
 
     def to_input_tensor(self, sents: List[List[str]], device: torch.device) -> torch.Tensor:
         """ Convert list of sentences (words) into tensor with necessary padding for 
