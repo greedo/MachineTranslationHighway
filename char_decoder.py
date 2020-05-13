@@ -32,12 +32,10 @@ class CharDecoder(nn.Module):
         @returns scores: called s in the PDF, shape (length, batch, self.vocab_size)
         @returns dec_hidden: internal state of the LSTM after reading the input characters. A tuple of two tensors of shape (1, batch, hidden_size)
         """
-        ### YOUR CODE HERE for part 2b
-        ### TODO - Implement the forward pass of the character decoder.
         input_embed = self.decoderCharEmb(input)
-        
-        ### END YOUR CODE 
-
+        output, (h_n, c_n) = self.charDecoder(input_embed, dec_hidden)
+        s_t = self.char_output_projection(output)
+        return s_t, (h_n, c_n)
 
     def train_forward(self, char_sequence, dec_hidden=None):
         """ Forward computation during training.
