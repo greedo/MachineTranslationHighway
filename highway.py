@@ -9,7 +9,7 @@ import torch.nn.functional as F
 class Highway(nn.Module):
 
     def __init__(self, word_embed_size):
-        super().__init__()
+        super(Highway, self).__init__()
 
         self.proj_layer = nn.Linear(in_features=word_embed_size,
                                     out_features=word_embed_size,
@@ -18,7 +18,8 @@ class Highway(nn.Module):
                                     out_features=word_embed_size,
                                     bias=True)
 
-        def forward(self, input: torch.Tensor):
-            x_proj = F.relu(self.proj_layer(input))
-            x_gate = nn.Sigmoid(self.gate_layer(input))
-            x_highway = x_gate * x_proj + (1 - x_gate) * input
+    def forward(self, input):
+        x_proj = F.relu(self.proj_layer(input))
+        x_gate = torch.sigmoid(self.gate_layer(input))
+        x_highway = x_gate * x_proj + (1 - x_gate) * input
+        return x_highway
