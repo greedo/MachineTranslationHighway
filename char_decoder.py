@@ -45,14 +45,11 @@ class CharDecoder(nn.Module):
 
         @returns The cross-entropy loss, computed as the *sum* of cross-entropy losses of all the words in the batch, for every character in the sequence.
         """
-        ### YOUR CODE HERE for part 2c
-        ### TODO - Implement training forward pass.
-        ###
-        ### Hint: - Make sure padding characters do not contribute to the cross-entropy loss.
         ###       - char_sequence corresponds to the sequence x_1 ... x_{n+1} from the handout (e.g., <START>,m,u,s,i,c,<END>).
-
-
-        ### END YOUR CODE
+        s_t, (h_n, c_n) = self.forward(char_sequence[:-1], dec_hidden=dec_hidden)
+        loss_fn = nn.CrossEntropyLoss(ignore_index=self.target_vocab.char2id['<pad>'], reduction='sum') # ignore padding chars
+        loss = loss_fn(s_t.view(-1, len(self.target_vocab.char2id)), char_sequence[1:].view(-1))
+        return loss
 
     def decode_greedy(self, initialStates, device, max_length=21):
         """ Greedy decoding
