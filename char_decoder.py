@@ -61,30 +61,33 @@ class CharDecoder(nn.Module):
                               The decoded strings should NOT contain the start-of-word and end-of-word characters.
         """
         ###      - Use target_vocab.char2id and target_vocab.id2char to convert between integers and characters
-        ###      - Use torch.tensor(..., device=device) to turn a list of character indices into a tensor.
         ###      - We use curly brackets as start-of-word and end-of-word characters. That is, use the character '{' for <START> and '}' for <END>.
         ###        Their indices are self.target_vocab.start_of_word and self.target_vocab.end_of_word, respectively.
         batch_size = initialStates[0].shape[1]
 
-        current_char = [self.target_vocab.char2id['{']] * batch_size  # len: (batch_size, )
-        decodedWords = ['{'] * batch_size  # len: (batch_size,)
+        current_char = [self.target_vocab.char2id['{']] * batch_size
+        # print(batch_size == len(current_char))
 
-        current_char_tensor = torch.tensor(current_char, device=device)  # shape: (batch_size,)
+        decodedWords = ['{'] * batch_size
+        # print(batch_size == len(decodedWords))
 
-        h_prev, c_prev = initialStates
+        current_char_tensor = torch.tensor(current_char, device=device)
+        # print(batch_size == current_char_tensor)
+
+        dec_hidden = initialStates
         # initialize h_prev and c_prev to the given states from the LSTM
 
         for t in range(max_length):
-            _, (h_new, c_new) = self.forward(current_char_tensor.unsqueeze(0), (h_prev, c_prev))
-            s = self.char_output_projection(h_new.squeeze(0))
+            _, (dec_hidden) = self.forward(current_char_tensor.unsqueeze(0), (dec_hidden))
+            s = self.char_output_projection(dec_hidden[0].squeeze(0))
             p = F.log_softmax(s, dim=1)
             current_char_tensor = torch.argmax(p, dim=1)
 
+            if current_char == '}':
+                break
+
             for i in range(batch_size):
                 decodedWords[i] += self.target_vocab.id2char[current_char_tensor[i].item()]
-
-            h_prev = h_new
-            c_prev = c_new
 
         for i in range(batch_size):
             decodedWords[i] = decodedWords[i][1:]
