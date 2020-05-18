@@ -26,11 +26,6 @@ class ModelEmbeddings(nn.Module):
         """
         super(ModelEmbeddings, self).__init__()
 
-        ## A4 code
-        # pad_token_idx = vocab.src['<pad>']
-        # self.embeddings = nn.Embedding(len(vocab.src), embed_size, padding_idx=pad_token_idx)
-        ## End A4 code
-
         self.char_embed_size = 50
         self.embed_size = embed_size
         self.char_embedding = nn.Embedding(len(vocab.char2id), self.char_embed_size, padding_idx=0)
@@ -47,12 +42,6 @@ class ModelEmbeddings(nn.Module):
         @param output: Tensor of shape (sentence_length, batch_size, embed_size), containing the 
             CNN-based embeddings for each word of the sentences in the batch
         """
-        ## A4 code
-        # output = self.embeddings(input)
-        # return output
-        ## End A4 code
-
-        ### YOUR CODE HERE for part 1f
         x_char_embed = self.char_embedding(input_tensor)
         # shape: (sentence_length, batch_size, max_word_length, e_char)
 

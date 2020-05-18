@@ -3,6 +3,7 @@
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 class CharDecoder(nn.Module):
     def __init__(self, hidden_size, char_embedding_size=50, target_vocab=None):
@@ -45,10 +46,9 @@ class CharDecoder(nn.Module):
 
         @returns The cross-entropy loss, computed as the *sum* of cross-entropy losses of all the words in the batch, for every character in the sequence.
         """
-        ###       - char_sequence corresponds to the sequence x_1 ... x_{n+1} from the handout (e.g., <START>,m,u,s,i,c,<END>).
         s_t, (h_n, c_n) = self.forward(char_sequence[:-1], dec_hidden=dec_hidden)
         loss_fn = nn.CrossEntropyLoss(ignore_index=self.target_vocab.char2id['<pad>'], reduction='sum') # ignore padding chars
-        loss = loss_fn(s_t.view(-1, len(self.target_vocab.char2id)), char_sequence[1:].view(-1))
+        loss = loss_fn(s_t.view(-1, len(self.target_vocab.char2id)), char_sequence[1:].contiguous().view(-1))
         return loss
 
     def decode_greedy(self, initialStates, device, max_length=21):
@@ -60,15 +60,34 @@ class CharDecoder(nn.Module):
         @returns decodedWords: a list (of length batch) of strings, each of which has length <= max_length.
                               The decoded strings should NOT contain the start-of-word and end-of-word characters.
         """
-
-        ### YOUR CODE HERE for part 2d
-        ### TODO - Implement greedy decoding.
-        ### Hints:
         ###      - Use target_vocab.char2id and target_vocab.id2char to convert between integers and characters
         ###      - Use torch.tensor(..., device=device) to turn a list of character indices into a tensor.
         ###      - We use curly brackets as start-of-word and end-of-word characters. That is, use the character '{' for <START> and '}' for <END>.
         ###        Their indices are self.target_vocab.start_of_word and self.target_vocab.end_of_word, respectively.
-        
-        
-        ### END YOUR CODE
+        batch_size = initialStates[0].shape[1]
 
+        current_char = [self.target_vocab.char2id['{']] * batch_size  # len: (batch_size, )
+        decodedWords = ['{'] * batch_size  # len: (batch_size,)
+
+        current_char_tensor = torch.tensor(current_char, device=device)  # shape: (batch_size,)
+
+        h_prev, c_prev = initialStates
+        # initialize h_prev and c_prev to the given states from the LSTM
+
+        for t in range(max_length):
+            _, (h_new, c_new) = self.forward(current_char_tensor.unsqueeze(0), (h_prev, c_prev))
+            s = self.char_output_projection(h_new.squeeze(0))
+            p = F.log_softmax(s, dim=1)
+            current_char_tensor = torch.argmax(p, dim=1)
+
+            for i in range(batch_size):
+                decodedWords[i] += self.target_vocab.id2char[current_char_tensor[i].item()]
+
+            h_prev = h_new
+            c_prev = c_new
+
+        for i in range(batch_size):
+            decodedWords[i] = decodedWords[i][1:]
+            decodedWords[i] = decodedWords[i].partition('}')[0]
+
+        return decodedWords
