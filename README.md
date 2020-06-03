@@ -1,4 +1,4 @@
-# Assignment 5 (NMT Assignment)
+# Neural Machine Translation with Recurrent Highway Networks
 
 Create virtual environment
 ```bash
